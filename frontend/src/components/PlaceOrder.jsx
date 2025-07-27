@@ -8,6 +8,7 @@ function PlaceOrder({ selectedItems, setPackageResults  }) {
 
     const handlePlaceOrder = async () => {
     try {
+      console.log('Placing order with items:', selectedItems);
       const response = await axios.post(`${apiUrl}/place-order`, {
         items: selectedItems,
       });
@@ -58,12 +59,13 @@ function PlaceOrder({ selectedItems, setPackageResults  }) {
           </button>
         </div>
       )}
-      <button
-        onClick={handlePlaceOrder}
-        className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition"
-      >
-        Place Order
-      </button>
+          <button
+            onClick={handlePlaceOrder}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition"
+          >
+            Place Order
+          </button>
+        
     </div>
   );
 }
