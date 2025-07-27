@@ -1,8 +1,23 @@
 import React, { useState } from 'react';
+import axios from 'axios';
+const apiUrl = import.meta.env.VITE_API_URL;
 
-function PlaceOrder({ selectedItems, onPlaceOrder }) {
+function PlaceOrder({ selectedItems, setPackageResults  }) {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+
+    const handlePlaceOrder = async () => {
+    try {
+      const response = await axios.post(`${apiUrl}/place-order`, {
+        items: selectedItems,
+      });
+
+      setPackageResults(response.data.packages); // assumes backend returns { packages: [...] }
+    } catch (error) {
+      console.error('Order failed:', error);
+      alert('Something went wrong while placing the order.');
+    }
+  };
 
   if (!selectedItems.length) return null;
 
@@ -44,7 +59,7 @@ function PlaceOrder({ selectedItems, onPlaceOrder }) {
         </div>
       )}
       <button
-        onClick={onPlaceOrder}
+        onClick={handlePlaceOrder}
         className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded transition"
       >
         Place Order
