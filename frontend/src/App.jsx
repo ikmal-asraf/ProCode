@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import ProductList from './components/ProductList';
-
+import PlaceOrder from './components/PlaceOrder';
+import './App.css';
 function App() {
   const [products, setProducts] = useState([]);
+  const [selectedItems, setSelectedItems] = useState([]);
+
   const apiUrl = import.meta.env.VITE_API_URL;
 
   useEffect(() => {
@@ -12,16 +15,24 @@ function App() {
       .catch((err) => console.error('Failed to fetch products:', err));
   }, []);
 
+  const handleSelectionChange = (updatedItems) => {
+    setSelectedItems(updatedItems);
+  };
+
   return (
-    <>
-      <h1 className="text-3xl font-bold underline">
-      Hello world!
-    </h1>
-    <div className="container">
-      <h1>{import.meta.env.VITE_APP_NAME}</h1>
-      <ProductList products={products} />
+    <div className="min-h-screen flex items-start bg-gray-100 py-10 px-4">
+      <ProductList
+        products={products}
+        selectedItems={selectedItems}
+        onSelectionChange={handleSelectionChange}
+      />
+      <div className="w-full max-w-xs">
+        <PlaceOrder
+          selectedItems={selectedItems}
+          onPlaceOrder={() => alert("Order placed")}
+        />
+      </div>
     </div>
-    </>
   );
 }
 
