@@ -13,7 +13,7 @@ function PlaceOrder({ selectedItems, setPackageResults  }) {
         items: selectedItems,
       });
 
-      setPackageResults(response.data.packages); // assumes backend returns { packages: [...] }
+      setPackageResults(response.data.packages);
     } catch (error) {
       console.error('Order failed:', error);
       alert('Something went wrong while placing the order.');

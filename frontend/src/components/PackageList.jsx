@@ -10,12 +10,30 @@ function PackageList({ packages }) {
 
   return (
     <div className="w-full max-w-2xl bg-white shadow-md rounded-lg p-6 mt-8">
-      <h2 className="text-2xl font-bold mb-6 text-center text-gray-800">
+      <h2 className="text-xl font-semibold mb-4 text-center text-gray-800 font-bold">
         Package Summary
       </h2>
       <div className="space-y-6">
         <div className="border border-gray-200 rounded-md p-4">
-          <h3 className="text-lg font-semibold mb-2 text-blue-700">Package {currentPage}</h3>
+          <div className="flex justify-between items-center mb-2">
+            <button
+              className="px-2 py-1 text-gray-600 rounded hover:bg-gray-100 disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+            >
+              &lt;
+            </button>
+            <h3 className="text-lg font-semibold text-blue-700">
+              Package {currentPage}
+            </h3>
+            <button
+              className="px-2 py-1 text-gray-600 rounded hover:bg-gray-100 disabled:opacity-50"
+              onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+              disabled={currentPage === totalPages}
+            >
+              &gt;
+            </button>
+          </div>
           <p className="text-sm text-gray-700">
             <strong>Items:</strong> {currentPackage.items.join(', ')}
           </p>
@@ -30,26 +48,8 @@ function PackageList({ packages }) {
           </p>
         </div>
       </div>
-      {totalPages > 1 && (
-        <div className="flex justify-center items-center gap-2 mt-6">
-          <button
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-            disabled={currentPage === 1}
-          >
-            Prev
-          </button>
-          <span className="font-medium">{currentPage} / {totalPages}</span>
-          <button
-            className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
-            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
-        </div>
-      )}
     </div>
   );
 }
+
 export default PackageList;

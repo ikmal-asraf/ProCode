@@ -23,7 +23,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen flex flex-row items-stretch gap-6 bg-gray-100 py-10 px-4 w-full">
+    <div className=" flex flex-row items-stretch gap-6 bg-gray-100 py-10 px-4 w-full">
       <div className="w-2/3 h-full">
         <ProductList
           products={products}

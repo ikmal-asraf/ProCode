@@ -23,30 +23,39 @@ class OrderController extends Controller
 
     private function splitIntoPackages($items)
     {
-        $items = $items->sortByDesc('price'); // Sort items by price for better distribution
+        // Step 1: Sort items by price DESC (best-fit decreasing)
+        $sorted = $items->sortByDesc('price')->values();
 
         $packages = [];
-        $currentPackage = [];
-        $currentTotal = 0;
 
-        foreach ($items as $item) {
-            if (($currentTotal + $item['price']) >= 250) {
-                if (!empty($currentPackage)) {
-                    $packages[] = $currentPackage;
+        foreach ($sorted as $item) {
+            $bestFitIndex = null;
+            $minRemaining = 999999; // large number as initial
+
+            foreach ($packages as $index => $package) {
+                $packagePrice = collect($package)->sum('price');
+
+                if (($packagePrice + $item['price']) <= 250) {
+                    $remaining = 250 - ($packagePrice + $item['price']);
+
+                    if ($remaining < $minRemaining) {
+                        $minRemaining = $remaining;
+                        $bestFitIndex = $index;
+                    }
                 }
-                $currentPackage = [$item];
-                $currentTotal = $item['price'];
+            }
+
+            if ($bestFitIndex !== null) {
+                $packages[$bestFitIndex][] = $item;
             } else {
-                $currentPackage[] = $item;
-                $currentTotal += $item['price'];
+                $packages[] = [$item]; // create new package
             }
         }
 
-        if (!empty($currentPackage)) {
-            $packages[] = $currentPackage;
-        }
+        // Step 2:  Rebalance weight 
+        $packages = $this->rebalanceWeight($packages);
 
-        // Build response with weight, total, courier cost
+        // Step 3: Format response
         return collect($packages)->map(function ($group, $index) {
             $totalWeight = collect($group)->sum('weight');
             $totalPrice = collect($group)->sum('price');
@@ -59,6 +68,44 @@ class OrderController extends Controller
                 'courier_price' => $this->calculateCourierCharge($totalWeight),
             ];
         })->toArray();
+    }
+
+    private function rebalanceWeight(array $packages): array
+    {
+        // Flatten all items and sort by weight descending
+        $allItems = collect($packages)->flatten(1)->sortByDesc('weight')->values();
+
+        $packageCount = count($packages);
+        $balanced = array_fill(0, $packageCount, []);
+        $totals = array_fill(0, $packageCount, ['price' => 0, 'weight' => 0]);
+
+        foreach ($allItems as $item) {
+            $bestFitIndex = null;
+            $minRemainingWeight = PHP_INT_MAX;
+
+            foreach ($totals as $index => $stats) {
+                // Only consider if package can take this item's price
+                if (($stats['price'] + $item['price']) <= 250) {
+                    $remainingWeight = $stats['weight'];
+                    
+                    if ($remainingWeight < $minRemainingWeight) {
+                        $minRemainingWeight = $remainingWeight;
+                        $bestFitIndex = $index;
+                    }
+                }
+            }
+
+            // If no package fits by price, drop to package with least weight anyway
+            if ($bestFitIndex === null) {
+                $bestFitIndex = collect($totals)->pluck('weight')->search(min(array_column($totals, 'weight')));
+            }
+
+            $balanced[$bestFitIndex][] = $item;
+            $totals[$bestFitIndex]['price'] += $item['price'];
+            $totals[$bestFitIndex]['weight'] += $item['weight'];
+        }
+
+        return $balanced;
     }
 
     private function calculateCourierCharge($weight)
