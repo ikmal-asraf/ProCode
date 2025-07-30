@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['http://localhost:5173'],
+    'allowed_origins' => ['http://localhost:5173', 'https://pro-code-git-main-ikmalfire-3005s-projects.vercel.app',],
 
     'allowed_origins_patterns' => [],
 
