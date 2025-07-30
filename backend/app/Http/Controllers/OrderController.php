@@ -70,7 +70,7 @@ class OrderController extends Controller
         })->toArray();
     }
 
-    private function rebalanceWeight(array $packages): array
+    private function rebalanceWeight($packages)
     {
         // Flatten all items and sort by weight descending
         $allItems = collect($packages)->flatten(1)->sortByDesc('weight')->values();
@@ -81,28 +81,32 @@ class OrderController extends Controller
 
         foreach ($allItems as $item) {
             $bestFitIndex = null;
-            $minRemainingWeight = PHP_INT_MAX;
+            $minWeight = PHP_INT_MAX;
 
+            // Find the package with least total weight that can still accept this item by price
             foreach ($totals as $index => $stats) {
-                // Only consider if package can take this item's price
-                if (($stats['price'] + $item['price']) <= 250) {
-                    $remainingWeight = $stats['weight'];
-                    
-                    if ($remainingWeight < $minRemainingWeight) {
-                        $minRemainingWeight = $remainingWeight;
+                $newPrice = $stats['price'] + $item['price'];
+
+                if ($newPrice <= 250) {
+                    if ($stats['weight'] < $minWeight) {
+                        $minWeight = $stats['weight'];
                         $bestFitIndex = $index;
                     }
                 }
             }
 
-            // If no package fits by price, drop to package with least weight anyway
             if ($bestFitIndex === null) {
-                $bestFitIndex = collect($totals)->pluck('weight')->search(min(array_column($totals, 'weight')));
+                // Create new package if no existing one fits
+                $balanced[] = [$item];
+                $totals[] = [
+                    'price' => $item['price'],
+                    'weight' => $item['weight'],
+                ];
+            } else {
+                $balanced[$bestFitIndex][] = $item;
+                $totals[$bestFitIndex]['price'] += $item['price'];
+                $totals[$bestFitIndex]['weight'] += $item['weight'];
             }
-
-            $balanced[$bestFitIndex][] = $item;
-            $totals[$bestFitIndex]['price'] += $item['price'];
-            $totals[$bestFitIndex]['weight'] += $item['weight'];
         }
 
         return $balanced;
